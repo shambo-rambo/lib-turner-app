@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import SimpleBookCard from './components/SimpleBookCard';
-import { REAL_BOOKS_DATA } from './data/realBooks';
+import FastBookCard from './components/FastBookCard';
+import { RELIABLE_BOOKS } from './data/reliableBooks';
 import './App.css';
 
 /**
@@ -99,8 +99,8 @@ function App() {
       {/* Main Content */}
       <main>
         <div className="books-grid">
-          {REAL_BOOKS_DATA.map((book, index) => (
-            <SimpleBookCard
+          {RELIABLE_BOOKS.map((book, index) => (
+            <FastBookCard
               key={book.id}
               book={book}
               onBookClick={handleBookClick}
