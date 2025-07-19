@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Book card hover effects */
+  .book-card {
+    @apply transform transition-all duration-300 ease-out;
+  }
+  
+  .book-card:hover {
+    @apply scale-105 shadow-xl;
+  }
+  
+  /* Genre theme utilities */
+  .theme-fantasy {
+    @apply bg-gradient-to-br from-fantasy-100 to-fantasy-200;
+  }
+  
+  .theme-scifi {
+    @apply bg-gradient-to-br from-scifi-100 to-scifi-200;
+  }
+  
+  /* Netflix-style grid */
+  .books-grid {
+    @apply grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6;
+  }
+}
