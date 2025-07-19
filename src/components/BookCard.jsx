@@ -151,12 +151,8 @@ const BookCard = ({
     ? book.engagement_data.student_ratings.reduce((a, b) => a + b, 0) / book.engagement_data.student_ratings.length
     : 0;
 
-  // Generate fallback cover URL with better quality
-  const fallbackUrl = book.metadata.cover_url 
-    ? book.metadata.cover_url.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
-    : `https://via.placeholder.com/300x450/${primaryGenre === 'Fantasy' ? '7C3AED' : '3B82F6'}/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
-  
-  const coverUrl = imageError ? `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 15))}` : fallbackUrl;
+  // Use book cover with fallback
+  const coverUrl = book.metadata.cover_url || `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
 
   const handleBookClick = () => {
     onBookClick?.(book);
@@ -257,25 +253,20 @@ const BookCard = ({
         )}
       </div>
 
-      {/* Book Info - Netflix style compact */}
-      <div className="p-2 space-y-1">
-        {/* Title */}
+      {/* Book Info - Ultra compact Netflix style */}
+      <div className="p-1 space-y-0.5">
+        {/* Title only - very compact */}
         <h3 className="font-medium text-gray-900 dark:text-white line-clamp-2 text-xs leading-tight">
           {book.title}
         </h3>
 
-        {/* Author */}
-        <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
-          {book.author}
-        </p>
-
-        {/* Rating only */}
+        {/* Just rating - super minimal */}
         <div className="flex items-center gap-1">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <StarIcon
                 key={i}
-                className={`w-2.5 h-2.5 ${
+                className={`w-2 h-2 ${
                   i < Math.round(avgRating) 
                     ? 'text-yellow-400 fill-current' 
                     : 'text-gray-300'

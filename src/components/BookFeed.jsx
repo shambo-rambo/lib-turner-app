@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import BookCard from './BookCard';
-import { generateQuickDataset } from '../data/mockDataGenerator';
+import { REAL_BOOKS_DATA } from '../data/realBooks';
 
 /**
  * Custom hook for infinite scroll
@@ -210,13 +210,13 @@ const BookFeed = ({
 
   // Load initial data
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadInitialData = () => {
       if (books.length === 0) {
         setLoading(true);
         try {
-          const dataset = await generateQuickDataset();
-          setBooks(dataset.books);
-          setDisplayedBooks(dataset.books.slice(0, ITEMS_PER_LOAD));
+          // Use real books data immediately
+          setBooks(REAL_BOOKS_DATA);
+          setDisplayedBooks(REAL_BOOKS_DATA.slice(0, ITEMS_PER_LOAD));
         } catch (err) {
           setError('Failed to load books. Please try again.');
           console.error('Error loading books:', err);
