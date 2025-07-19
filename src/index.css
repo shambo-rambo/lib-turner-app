@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   * {
@@ -34,9 +34,9 @@
     @apply bg-gradient-to-br from-scifi-100 to-scifi-200;
   }
   
-  /* Netflix-style grid */
+  /* Netflix-style grid - equal mobile/desktop */
   .books-grid {
-    @apply grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6;
+    @apply grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8;
   }
   
   /* Text utilities */

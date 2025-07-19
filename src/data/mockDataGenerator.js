@@ -386,18 +386,70 @@ export const saveDatasetToFiles = async (dataset) => {
 export const generateQuickDataset = async () => {
   console.log('⚡ Generating quick dataset for development...');
   
-  const dataset = {
-    books: [...CUSTOM_DEMO_BOOKS],
-    students: generateMockStudents(10),
-    school: generateMockSchool(),
-    metadata: {
-      generated_at: new Date().toISOString(),
-      total_books: CUSTOM_DEMO_BOOKS.length,
-      books_by_source: { custom_demo: CUSTOM_DEMO_BOOKS.length },
-      note: 'Quick dataset for development - contains only custom demo books'
+  try {
+    // Get some real Google Books for better demo
+    const popularSearches = [
+      'Harry Potter',
+      'Percy Jackson', 
+      'Hunger Games',
+      'Wonder R.J. Palacio',
+      'Diary of a Wimpy Kid',
+      'Dork Diaries',
+      'Wings of Fire',
+      'Dog Man'
+    ];
+    
+    const books = [...CUSTOM_DEMO_BOOKS];
+    
+    // Add some real Google Books
+    for (const search of popularSearches.slice(0, 4)) {
+      try {
+        const googleBooks = await fetchGoogleBooks(search, 3);
+        for (const googleBook of googleBooks.slice(0, 2)) {
+          const libFlixBook = transformGoogleBookToLibFlixBook(googleBook);
+          if (libFlixBook.title && !libFlixBook.title.includes('Unknown')) {
+            books.push(libFlixBook);
+          }
+        }
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        console.warn(`Could not fetch books for ${search}:`, error);
+      }
     }
-  };
+    
+    const dataset = {
+      books: books,
+      students: generateMockStudents(10),
+      school: generateMockSchool(),
+      metadata: {
+        generated_at: new Date().toISOString(),
+        total_books: books.length,
+        books_by_source: { 
+          custom_demo: CUSTOM_DEMO_BOOKS.length,
+          google_books: books.length - CUSTOM_DEMO_BOOKS.length
+        },
+        note: 'Quick dataset with real Google Books for better demo'
+      }
+    };
 
-  console.log(`✅ Quick dataset generated: ${dataset.books.length} books, ${dataset.students.length} students`);
-  return dataset;
+    console.log(`✅ Quick dataset generated: ${dataset.books.length} books (${books.length - CUSTOM_DEMO_BOOKS.length} from Google Books), ${dataset.students.length} students`);
+    return dataset;
+  } catch (error) {
+    console.warn('Falling back to demo books only:', error);
+    const dataset = {
+      books: [...CUSTOM_DEMO_BOOKS],
+      students: generateMockStudents(10),
+      school: generateMockSchool(),
+      metadata: {
+        generated_at: new Date().toISOString(),
+        total_books: CUSTOM_DEMO_BOOKS.length,
+        books_by_source: { custom_demo: CUSTOM_DEMO_BOOKS.length },
+        note: 'Fallback dataset - demo books only'
+      }
+    };
+
+    console.log(`✅ Fallback dataset generated: ${dataset.books.length} books, ${dataset.students.length} students`);
+    return dataset;
+  }
 };

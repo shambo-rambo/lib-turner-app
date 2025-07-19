@@ -151,9 +151,12 @@ const BookCard = ({
     ? book.engagement_data.student_ratings.reduce((a, b) => a + b, 0) / book.engagement_data.student_ratings.length
     : 0;
 
-  // Generate placeholder image URL
-  const placeholderUrl = `https://via.placeholder.com/300x450/${primaryGenre === 'Fantasy' ? '7C3AED' : '3B82F6'}/white?text=${encodeURIComponent(book.title)}`;
-  const coverUrl = imageError ? placeholderUrl : (book.metadata.cover_url || placeholderUrl);
+  // Generate fallback cover URL with better quality
+  const fallbackUrl = book.metadata.cover_url 
+    ? book.metadata.cover_url.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
+    : `https://via.placeholder.com/300x450/${primaryGenre === 'Fantasy' ? '7C3AED' : '3B82F6'}/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
+  
+  const coverUrl = imageError ? `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 15))}` : fallbackUrl;
 
   const handleBookClick = () => {
     onBookClick?.(book);
@@ -254,73 +257,36 @@ const BookCard = ({
         )}
       </div>
 
-      {/* Book Info */}
-      <div className="p-4 space-y-2">
+      {/* Book Info - Netflix style compact */}
+      <div className="p-2 space-y-1">
         {/* Title */}
-        <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 text-sm leading-tight">
+        <h3 className="font-medium text-gray-900 dark:text-white line-clamp-2 text-xs leading-tight">
           {book.title}
         </h3>
 
         {/* Author */}
-        <p className="text-gray-600 dark:text-gray-400 text-xs">
-          by {book.author}
+        <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
+          {book.author}
         </p>
 
-        {/* Series info */}
-        {book.series.name && (
-          <p className={`text-xs ${theme.accent} font-medium`}>
-            {book.series.name} #{book.series.book}
-          </p>
-        )}
-
-        {/* Rating and stats */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <StarIcon
-                  key={i}
-                  className={`w-3 h-3 ${
-                    i < Math.round(avgRating) 
-                      ? 'text-yellow-400 fill-current' 
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-xs text-gray-500 ml-1">
-              ({book.engagement_data.student_ratings.length})
-            </span>
+        {/* Rating only */}
+        <div className="flex items-center gap-1">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <StarIcon
+                key={i}
+                className={`w-2.5 h-2.5 ${
+                  i < Math.round(avgRating) 
+                    ? 'text-yellow-400 fill-current' 
+                    : 'text-gray-300'
+                }`}
+              />
+            ))}
           </div>
-          
-          <div className="text-xs text-gray-500">
-            {book.metadata.pages}p
-          </div>
+          <span className="text-xs text-gray-500">
+            {avgRating > 0 ? avgRating.toFixed(1) : 'New'}
+          </span>
         </div>
-
-        {/* Genre tags */}
-        <div className="flex flex-wrap gap-1">
-          {book.metadata.genres.slice(0, 2).map((genre) => (
-            <span
-              key={genre}
-              className={`
-                px-2 py-1 text-xs rounded-full font-medium
-                ${GENRE_THEMES[genre]?.gradient ? `bg-gradient-to-r ${GENRE_THEMES[genre].gradient}` : 'bg-gray-100 dark:bg-gray-700'}
-                ${GENRE_THEMES[genre]?.accent || 'text-gray-600 dark:text-gray-300'}
-              `}
-            >
-              {genre}
-            </span>
-          ))}
-        </div>
-
-        {/* Currently reading indicator */}
-        {book.engagement_data.total_checkouts > 20 && (
-          <div className="flex items-center gap-1 text-xs text-green-600">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>Popular choice</span>
-          </div>
-        )}
       </div>
     </div>
   );

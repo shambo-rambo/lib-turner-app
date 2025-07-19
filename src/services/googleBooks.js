@@ -244,13 +244,21 @@ const extractSubjects = (volumeInfo) => {
 const extractBestCoverImage = (imageLinks) => {
   if (!imageLinks) return '';
   
-  // Prefer higher quality images
-  return imageLinks.extraLarge || 
-         imageLinks.large || 
-         imageLinks.medium || 
-         imageLinks.thumbnail || 
-         imageLinks.smallThumbnail || 
-         '';
+  // Prefer higher quality images and ensure HTTPS
+  const baseUrl = imageLinks.extraLarge || 
+                  imageLinks.large || 
+                  imageLinks.medium || 
+                  imageLinks.thumbnail || 
+                  imageLinks.smallThumbnail || 
+                  '';
+  
+  // Convert HTTP to HTTPS and increase size parameters
+  return baseUrl
+    .replace('http://', 'https://')
+    .replace('&edge=curl', '')
+    .replace('zoom=1', 'zoom=2')
+    .replace('img=1', 'img=1')
+    + '&fife=w400-h600';
 };
 
 /**
