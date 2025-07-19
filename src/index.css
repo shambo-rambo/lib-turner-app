@@ -4,116 +4,298 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+/* Ensure proper CSS cascade */
+* {
+  box-sizing: border-box;
 }
 
-@layer components {
-  /* Book card hover effects */
-  .book-card {
-    @apply transform transition-all duration-300 ease-out;
-  }
-  
-  .book-card:hover {
-    @apply scale-105 shadow-xl;
-  }
-  
-  /* Genre theme utilities */
-  .theme-fantasy {
-    @apply bg-gradient-to-br from-fantasy-100 to-fantasy-200;
-  }
-  
-  .theme-scifi {
-    @apply bg-gradient-to-br from-scifi-100 to-scifi-200;
-  }
-  
-  /* Netflix-style grid - equal mobile/desktop */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+/* Netflix-style grid - using explicit CSS for reliability */
+.books-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 16px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 640px) {
   .books-grid {
-    display: grid;
-    gap: 0.75rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  
-  @media (min-width: 640px) {
-    .books-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-  
-  @media (min-width: 768px) {
-    .books-grid {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .books-grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-  }
-  
-  @media (min-width: 1280px) {
-    .books-grid {
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-    }
-  }
-  
-  @media (min-width: 1536px) {
-    .books-grid {
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-    }
-  }
-  
-  /* Text utilities */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px;
   }
 }
 
-@layer utilities {
-  /* Custom animations */
-  .animate-fadeIn {
-    animation: fadeIn 0.6s ease-out forwards;
+@media (min-width: 768px) {
+  .books-grid {
+    grid-template-columns: repeat(5, 1fr);
   }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+}
+
+@media (min-width: 1024px) {
+  .books-grid {
+    grid-template-columns: repeat(6, 1fr);
   }
-  
-  /* Backdrop blur utilities */
-  .backdrop-blur-xs {
-    backdrop-filter: blur(2px);
+}
+
+@media (min-width: 1280px) {
+  .books-grid {
+    grid-template-columns: repeat(7, 1fr);
   }
-  
-  .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
+}
+
+@media (min-width: 1536px) {
+  .books-grid {
+    grid-template-columns: repeat(8, 1fr);
   }
-  
-  .backdrop-blur-md {
-    backdrop-filter: blur(8px);
+}
+
+/* Book card styling */
+.book-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.book-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.book-cover-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.book-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-cover {
+  transform: scale(1.05);
+}
+
+.book-info {
+  padding: 8px;
+}
+
+.book-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.3;
+  margin: 0 0 4px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.book-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  width: 8px;
+  height: 8px;
+  fill: #d1d5db;
+}
+
+.star.filled {
+  fill: #fbbf24;
+}
+
+.rating-text {
+  font-size: 10px;
+  color: #6b7280;
+  margin-left: 2px;
+}
+
+/* Header styling */
+.header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.logo-text h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.logo-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Demo banner */
+.demo-banner {
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Controls */
+.feed-controls {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.controls-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controls-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.controls-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sort-select {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+}
+
+.filter-button {
+  padding: 6px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.filter-button:hover {
+  background: #2563eb;
+}
+
+/* Loading and empty states */
+.skeleton {
+  background: #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-cover {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: #d1d5db;
+}
+
+.skeleton-info {
+  padding: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: #d1d5db;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Utility classes */
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

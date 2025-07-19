@@ -4,39 +4,39 @@
  */
 
 import React, { useState } from 'react';
-import BookFeed from './components/BookFeed';
+import SimpleBookCard from './components/SimpleBookCard';
+import { REAL_BOOKS_DATA } from './data/realBooks';
 import './App.css';
 
 /**
  * Header component with LibFlix branding
  */
 const Header = () => (
-  <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
-    <div className="max-w-7xl mx-auto px-4 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">L</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              LibFlix
-            </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Your Netflix for Books
-            </p>
-          </div>
+  <header className="header">
+    <div className="header-content">
+      <div className="logo">
+        <div className="logo-icon">L</div>
+        <div className="logo-text">
+          <h1>LibFlix</h1>
+          <p>Your Netflix for Books</p>
         </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            <span>✨ MVP Demo</span>
-          </div>
-          
-          {/* Profile placeholder */}
-          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-medium">S</span>
-          </div>
+      </div>
+      
+      <div className="controls-actions">
+        <span style={{ fontSize: '14px', color: '#6b7280' }}>✨ MVP Demo</span>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          background: 'linear-gradient(135deg, #10b981, #3b82f6)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
+          S
         </div>
       </div>
     </div>
@@ -47,12 +47,27 @@ const Header = () => (
  * Demo banner component
  */
 const DemoBanner = () => (
-  <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-    <div className="max-w-7xl mx-auto px-4 py-3">
-      <div className="flex items-center justify-center space-x-2 text-sm">
-        <span>🚀</span>
-        <span>LibFlix MVP Demo - Transforming School Libraries with AI-Powered Discovery</span>
-        <span>📚</span>
+  <div className="demo-banner">
+    🚀 LibFlix MVP Demo - Transforming School Libraries with AI-Powered Discovery 📚
+  </div>
+);
+
+/**
+ * Feed controls component
+ */
+const FeedControls = () => (
+  <div className="feed-controls">
+    <div className="controls-content">
+      <h2 className="controls-title">Discover Books</h2>
+      
+      <div className="controls-actions">
+        <select className="sort-select">
+          <option value="popular">Most Popular</option>
+          <option value="rating">Highest Rated</option>
+          <option value="recent">Recently Added</option>
+          <option value="level">Reading Level</option>
+        </select>
+        <button className="filter-button">Filters</button>
       </div>
     </div>
   </div>
@@ -68,57 +83,58 @@ function App() {
   const handleBookClick = (book) => {
     console.log('Book clicked:', book.title);
     setSelectedBook(book);
-    // In real app: navigate to book detail page
-  };
-
-  const handleBookSave = (book) => {
-    console.log('Book saved:', book.title);
-    // In real app: add to user's saved books
-  };
-
-  const handleBookRate = (book, rating) => {
-    console.log('Book rated:', book.title, 'Rating:', rating);
-    // In real app: submit rating to backend
-  };
-
-  const handleBookCheckout = (book) => {
-    console.log('Book checkout:', book.title);
-    // In real app: initiate checkout process
-  };
-
-  const handleBookShare = (book) => {
-    console.log('Book shared:', book.title);
-    // In real app: open share dialog
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Demo Banner */}
       <DemoBanner />
       
       {/* Header */}
       <Header />
       
+      {/* Feed Controls */}
+      <FeedControls />
+      
       {/* Main Content */}
       <main>
-        <BookFeed
-          onBookClick={handleBookClick}
-          onBookSave={handleBookSave}
-          onBookRate={handleBookRate}
-          onBookCheckout={handleBookCheckout}
-          onBookShare={handleBookShare}
-        />
+        <div className="books-grid">
+          {REAL_BOOKS_DATA.map((book, index) => (
+            <SimpleBookCard
+              key={book.id}
+              book={book}
+              onBookClick={handleBookClick}
+              style={{ animationDelay: `${index * 50}ms` }}
+            />
+          ))}
+        </div>
       </main>
 
       {/* Debug info (development only) */}
-      {process.env.NODE_ENV === 'development' && selectedBook && (
-        <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg max-w-sm">
-          <h4 className="font-semibold mb-2">Selected Book:</h4>
-          <p className="text-sm">{selectedBook.title}</p>
-          <p className="text-xs text-gray-300">by {selectedBook.author}</p>
+      {selectedBook && (
+        <div style={{
+          position: 'fixed',
+          bottom: '16px',
+          right: '16px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '16px',
+          borderRadius: '8px',
+          maxWidth: '300px',
+          fontSize: '14px'
+        }}>
+          <h4 style={{ margin: '0 0 8px 0', fontWeight: '600' }}>Selected Book:</h4>
+          <p style={{ margin: '0 0 4px 0' }}>{selectedBook.title}</p>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#d1d5db' }}>by {selectedBook.author}</p>
           <button
             onClick={() => setSelectedBook(null)}
-            className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#60a5fa',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
           >
             Close
           </button>
