@@ -4,6 +4,12 @@
  */
 
 const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
+
+// Debug logging for API key
+console.log('Google Books API Key loaded:', API_KEY ? 'Present' : 'Missing');
+if (!API_KEY || API_KEY === 'your_api_key_here') {
+  console.error('❌ Google Books API key is missing or invalid. Check your .env file.');
+}
 const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
 
 class GoogleBooksAPI {
@@ -42,6 +48,12 @@ class GoogleBooksAPI {
     // Check cache first
     if (this.cache.has(cleanISBN)) {
       return this.cache.get(cleanISBN);
+    }
+
+    // Skip API call if key is missing or invalid
+    if (!API_KEY || API_KEY === 'your_api_key_here') {
+      console.warn(`Skipping Google Books API call - invalid API key for ISBN: ${cleanISBN}`);
+      return null;
     }
 
     try {
@@ -271,8 +283,8 @@ export const testGoogleBooksAPI = async () => {
   console.log('Testing Google Books API...');
   console.log('API Stats:', googleBooksAPI.getStats());
   
-  if (!API_KEY) {
-    console.warn('No API key found. Add VITE_GOOGLE_BOOKS_API_KEY to .env.local');
+  if (!API_KEY || API_KEY === 'your_api_key_here') {
+    console.warn('No valid API key found. Add VITE_GOOGLE_BOOKS_API_KEY to .env file');
     return false;
   }
   

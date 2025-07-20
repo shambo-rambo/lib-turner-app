@@ -96,8 +96,12 @@ function App() {
       try {
         setLoading(true);
         
-        // Test Google Books API first
-        await testGoogleBooksAPI();
+        // Test Google Books API first (optional - won't block app loading)
+        try {
+          await testGoogleBooksAPI();
+        } catch (error) {
+          console.warn('Google Books API test failed, but app will continue:', error.message);
+        }
         
         // Get enhanced books
         const enhancedBooks = await enhancedBooksManager.getEnhancedBooks();
