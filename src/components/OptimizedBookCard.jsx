@@ -66,8 +66,8 @@ const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
       setImageState('loading');
       console.log(`Loading image for: ${book.title}`);
 
-      // Try to load with enhanced fallbacks
-      const result = await imageCache.loadImageWithFallbacks(imageSources, 'high', book);
+      // Try to load with enhanced fallbacks - let the system generate optimized URLs
+      const result = await imageCache.loadImageWithFallbacks([], 'high', book);
       if (result) {
         setCachedImage(result);
         setImageState('loaded');

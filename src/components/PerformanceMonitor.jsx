@@ -65,13 +65,13 @@ const PerformanceMonitor = ({ isVisible = false }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       const cacheStats = imageCache.getStats();
-      const debugReport = imageDebugger.generateReport();
+      const debugReport = window.imageDebugger?.generateReport?.() || { failures: { byDomain: [] } };
       
       // Estimate memory usage (rough calculation)
       const estimatedMemory = cacheStats.cached * 0.5; // ~0.5MB per cached image
       
       // Get top failing domain
-      const topFailingDomain = debugReport.failures.byDomain.length > 0 
+      const topFailingDomain = debugReport?.failures?.byDomain?.length > 0 
         ? debugReport.failures.byDomain[0][0] 
         : 'None';
       
