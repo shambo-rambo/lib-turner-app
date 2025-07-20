@@ -48,35 +48,42 @@ const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
     return () => observer.disconnect();
   }, []);
 
+  // Create loadImage function outside useEffect so it can be reused
+  const loadImage = async () => {
+    // Check if ANY of the URLs are already cached
+    let cached = null;
+    for (const url of imageSources) {
+      cached = imageCache.getCachedImage(url);
+      if (cached) break;
+    }
+    
+    if (cached) {
+      setCachedImage(cached);
+      setImageState('loaded');
+      console.log(`📦 Using cached image for: ${book.title}`);
+      return;
+    }
+
+    setImageState('loading');
+    console.log(`Loading image for: ${book.title}`);
+
+    // Try to load with enhanced fallbacks - let the system generate optimized URLs
+    const result = await imageCache.loadImageWithFallbacks(imageSources, 'high', book);
+    if (result) {
+      setCachedImage(result);
+      setImageState('loaded');
+      console.log(`✅ Successfully loaded image for: ${book.title} from ${result.url}`);
+    } else {
+      setImageState('failed');
+      console.log(`❌ Failed to load any image for: ${book.title}`);
+    }
+  };
+
   // Load image with caching
   useEffect(() => {
     if (!isVisible || !imageSources.length || (!isIntersecting && imageState === 'loading')) {
       return;
     }
-
-    const loadImage = async () => {
-      // Check if already cached
-      const cached = imageCache.getCachedImage(imageSources[0]);
-      if (cached) {
-        setCachedImage(cached);
-        setImageState('loaded');
-        return;
-      }
-
-      setImageState('loading');
-      console.log(`Loading image for: ${book.title}`);
-
-      // Try to load with enhanced fallbacks - let the system generate optimized URLs
-      const result = await imageCache.loadImageWithFallbacks([], 'high', book);
-      if (result) {
-        setCachedImage(result);
-        setImageState('loaded');
-        console.log(`✅ Successfully loaded image for: ${book.title}`);
-      } else {
-        setImageState('failed');
-        console.log(`❌ Failed to load any image for: ${book.title}`);
-      }
-    };
 
     loadImage();
   }, [book.id, isVisible, isIntersecting]);
@@ -121,8 +128,17 @@ const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
             // loading="lazy"           // REMOVED - causes issues with some browsers
             decoding="async"           // Keep this - helps performance
             onError={(e) => {
-              console.log('Image failed to render:', e.target.src);
-              setImageState('failed');
+              console.warn('Image rendering issue:', e.target.src);
+              // Don't immediately set to failed - the image might load on retry
+              // Only set to failed if this is a persistent issue
+              setTimeout(() => {
+                if (imageState === 'loaded') {
+                  console.log('Retrying image load due to rendering issue');
+                  setImageState('loading');
+                  // Trigger a reload
+                  loadImage();
+                }
+              }, 1000);
             }}
           />
         )}

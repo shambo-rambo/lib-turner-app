@@ -143,13 +143,45 @@ function App() {
     setDebugResults(null);
     
     try {
-      console.log('🔍 Starting comprehensive image debug test...');
-      const results = await testAllBookImages(books, (processed, total, result) => {
-        console.log(`Progress: ${processed}/${total} - ${result.success ? '✅' : '❌'} ${result.url}`);
-      });
+      console.log('🔍 Starting simplified image debug test...');
       
-      setDebugResults(results);
-      console.log('🎯 Debug test completed!', results);
+      // Simple test: try loading first 3 books
+      const testBooks = books.slice(0, 3);
+      const results = [];
+      
+      for (let i = 0; i < testBooks.length; i++) {
+        const book = testBooks[i];
+        console.log(`Testing ${i + 1}/${testBooks.length}: ${book.title}`);
+        
+        const urls = [
+          book.metadata?.cover_url,
+          ...(book.metadata?.fallback_urls || [])
+        ].filter(Boolean);
+        
+        const result = await imageCache.loadImageWithFallbacks(urls, 'high', book);
+        results.push({
+          title: book.title,
+          success: !!result,
+          url: result?.url || 'Failed'
+        });
+      }
+      
+      const successCount = results.filter(r => r.success).length;
+      const fakeResults = {
+        report: {
+          summary: {
+            totalSuccess: successCount,
+            totalFailed: results.length - successCount,
+            successRate: `${Math.round((successCount / results.length) * 100)}%`
+          },
+          failures: {
+            byDomain: []
+          }
+        }
+      };
+      
+      setDebugResults(fakeResults);
+      console.log('🎯 Debug test completed!', fakeResults);
     } catch (error) {
       console.error('❌ Debug test failed:', error);
     } finally {
@@ -158,9 +190,11 @@ function App() {
   };
 
   const clearDebugData = () => {
-    imageDebugger.reset();
+    // Clear image cache data
+    imageCache.failedUrls.clear();
+    imageCache.cache.clear();
     setDebugResults(null);
-    console.log('🧹 Debug data cleared');
+    console.log('🧹 Image cache and debug data cleared');
   };
 
   return (
@@ -388,6 +422,28 @@ function App() {
             }}
           >
             {showDebugPanel ? 'Hide' : 'Show'} Debug
+          </button>
+          
+          <button
+            onClick={() => {
+              if (window.diagnoseBookCover && books.length > 0) {
+                window.diagnoseBookCover(books, 0);
+                console.log('🔍 Check the console above for detailed diagnosis!');
+              } else {
+                console.log('Diagnostic function not available or no books loaded');
+              }
+            }}
+            style={{
+              background: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            🔍 Diagnose
           </button>
         </div>
       )}

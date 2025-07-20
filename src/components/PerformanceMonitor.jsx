@@ -65,7 +65,14 @@ const PerformanceMonitor = ({ isVisible = false }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       const cacheStats = imageCache.getStats();
-      const debugReport = window.imageDebugger?.generateReport?.() || { failures: { byDomain: [] } };
+      const debugReport = window.imageDebugger?.generateReport?.() || { 
+        failures: { 
+          byDomain: [], 
+          corsErrors: [],
+          networkErrors: [],
+          byError: []
+        } 
+      };
       
       // Estimate memory usage (rough calculation)
       const estimatedMemory = cacheStats.cached * 0.5; // ~0.5MB per cached image
@@ -82,9 +89,9 @@ const PerformanceMonitor = ({ isVisible = false }) => {
         imagesLoading: cacheStats.loading,
         memoryUsage: estimatedMemory,
         renderTime: performance.now() - renderStartRef.current,
-        corsErrors: debugReport.failures.corsErrors.length,
-        networkErrors: debugReport.failures.networkErrors.length,
-        timeoutErrors: debugReport.failures.byError.find(([error]) => error === 'Timeout')?.[1] || 0,
+        corsErrors: debugReport?.failures?.corsErrors?.length || 0,
+        networkErrors: debugReport?.failures?.networkErrors?.length || 0,
+        timeoutErrors: debugReport?.failures?.byError?.find(([error]) => error === 'Timeout')?.[1] || 0,
         topFailingDomain
       }));
     }, 1000);
