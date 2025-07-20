@@ -6,9 +6,9 @@ This document explains how to set up your development environment for LibTurner 
 
 ### 1. **Repository Setup**
 ```bash
-# Clone the repository (once it's pushed to GitHub)
-git clone https://github.com/YOUR_USERNAME/libflix-app.git
-cd libflix-app
+# Clone the repository
+git clone git@github.com:shambo-rambo/lib-turner-app.git
+cd lib-turner-app
 
 # Install dependencies
 npm install
