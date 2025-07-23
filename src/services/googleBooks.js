@@ -102,9 +102,9 @@ export const fetchGoogleBooks = async (query, maxResults = 10, startIndex = 0) =
 };
 
 /**
- * Transform Google Books API response to LibFlix book schema
+ * Transform Google Books API response to LibTurner book schema
  */
-export const transformGoogleBookToLibFlixBook = (googleBook, readingLevelData = null) => {
+export const transformGoogleBookToLibTurnerBook = (googleBook, readingLevelData = null) => {
   const volumeInfo = googleBook.volumeInfo || {};
   const saleInfo = googleBook.saleInfo || {};
   
@@ -361,13 +361,13 @@ export const generateDiverseBookCollection = async (targetCount = 70) => {
           if (books.length >= targetCount) break;
           if (usedBookIds.has(googleBook.id)) continue;
           
-          const libFlixBook = transformGoogleBookToLibFlixBook(googleBook);
+          const libTurnerBook = transformGoogleBookToLibTurnerBook(googleBook);
           
           // Validate book has essential data
-          if (libFlixBook.title && libFlixBook.author && !libFlixBook.title.includes('Unknown')) {
-            books.push(libFlixBook);
+          if (libTurnerBook.title && libTurnerBook.author && !libTurnerBook.title.includes('Unknown')) {
+            books.push(libTurnerBook);
             usedBookIds.add(googleBook.id);
-            console.log(`Added: ${libFlixBook.title} by ${libFlixBook.author}`);
+            console.log(`Added: ${libTurnerBook.title} by ${libTurnerBook.author}`);
           }
         }
         
@@ -395,9 +395,9 @@ export const fetchBooksByPopularAuthors = async (maxBooksPerAuthor = 3) => {
       const googleBooks = await fetchGoogleBooks(searchQuery, maxBooksPerAuthor);
       
       for (const googleBook of googleBooks) {
-        const libFlixBook = transformGoogleBookToLibFlixBook(googleBook);
-        if (libFlixBook.title && !libFlixBook.title.includes('Unknown')) {
-          books.push(libFlixBook);
+        const libTurnerBook = transformGoogleBookToLibTurnerBook(googleBook);
+        if (libTurnerBook.title && !libTurnerBook.title.includes('Unknown')) {
+          books.push(libTurnerBook);
         }
       }
       

@@ -5,26 +5,57 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { imageCache } from '../utils/imageCache';
+import { getCurrentUser } from '../services/auth.js';
+import { PencilIcon } from '@heroicons/react/24/outline';
+import BookCoverUpload from './admin/BookCoverUpload.jsx';
 
-const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
+const OptimizedBookCard = ({ book, onBookClick, onCoverUpdated, isVisible = true }) => {
   const [imageState, setImageState] = useState('loading');
   const [cachedImage, setCachedImage] = useState(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const cardRef = useRef(null);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        // Admin check (logging removed for cleaner console)
+        setUser(currentUser);
+        setIsAdmin(currentUser && currentUser.user_type === 'admin' && currentUser.permissions?.upload_covers);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
 
   // Calculate average rating
   const avgRating = book.engagement_data.student_ratings.length > 0
     ? book.engagement_data.student_ratings.reduce((a, b) => a + b, 0) / book.engagement_data.student_ratings.length
     : 0;
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    // Don't trigger book click if clicking on admin button
+    if (e.target.closest('[data-admin-button]')) {
+      return;
+    }
     onBookClick?.(book);
   };
 
-  // Image sources with fallbacks
+  // Image sources with fallbacks - prioritize custom covers
   const imageSources = [
-    book.metadata.cover_url,
-    ...(book.metadata.fallback_urls || [])
+    book.effectiveCoverUrl,
+    book.metadata?.displayCoverUrl,
+    book.metadata?.custom_cover_url,
+    book.metadata?.cover_url,
+    ...(book.metadata?.fallback_urls || [])
   ].filter(Boolean);
 
   // Intersection observer for lazy loading
@@ -60,19 +91,19 @@ const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
     if (cached) {
       setCachedImage(cached);
       setImageState('loaded');
-      console.log(`📦 Using cached image for: ${book.title}`);
+      // Using cached image (logging removed for cleaner console)
       return;
     }
 
     setImageState('loading');
-    console.log(`Loading image for: ${book.title}`);
+    // console.log(`Loading image for: ${book.title}`); // Reduced noise
 
     // Try to load with enhanced fallbacks - let the system generate optimized URLs
     const result = await imageCache.loadImageWithFallbacks(imageSources, 'high', book);
     if (result) {
       setCachedImage(result);
       setImageState('loaded');
-      console.log(`✅ Successfully loaded image for: ${book.title} from ${result.url}`);
+      // Image loaded successfully (logging removed for cleaner console)
     } else {
       setImageState('failed');
       console.log(`❌ Failed to load any image for: ${book.title}`);
@@ -105,6 +136,8 @@ const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
       ref={cardRef}
       className="book-card" 
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         transform: 'translateZ(0)', // Force GPU acceleration
         willChange: 'transform'
@@ -294,6 +327,55 @@ const OptimizedBookCard = ({ book, onBookClick, isVisible = true }) => {
         }}>
           {book.readingLevel.atos.toFixed(1)}
         </div>
+
+        {/* Admin Edit Button */}
+        {isAdmin && (
+          <div style={{
+            position: 'absolute',
+            top: '6px',
+            right: '6px',
+            opacity: isHovered ? 1 : 0,
+            transform: isHovered ? 'translateY(0)' : 'translateY(-8px)',
+            transition: 'all 0.3s ease'
+          }}>
+            <BookCoverUpload
+              book={book}
+              onCoverUpdated={onCoverUpdated}
+              trigger={
+                <button
+                  data-admin-button="true"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(4px)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.background = 'rgba(0, 0, 0, 0.9)';
+                    e.target.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.background = 'rgba(0, 0, 0, 0.7)';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                  title="Edit book cover"
+                >
+                  <PencilIcon style={{ width: '16px', height: '16px' }} />
+                </button>
+              }
+            />
+          </div>
+        )}
       </div>
 
       <div className="book-info">

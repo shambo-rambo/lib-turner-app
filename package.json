@@ -1,5 +1,5 @@
 {
-  "name": "libflix-app",
+  "name": "libturner-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,8 +16,10 @@
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/postcss": "^4.1.11",
+    "firebase": "^12.0.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

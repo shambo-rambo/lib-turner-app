@@ -30,7 +30,9 @@ export const createBookSchema = () => ({
     genres: [], // Array of genre strings
     subjects: [], // Array of subject strings
     description: '',
-    cover_url: '',
+    cover_url: '', // Default/API cover URL
+    custom_cover_url: '', // Admin uploaded cover URL
+    cover_source: 'api', // 'api', 'custom'
     preview_url: '', // For in-browser reading
   },
   availability: {
@@ -56,6 +58,7 @@ export const createStudentSchema = () => ({
   encrypted_name: '', // AES-256-GCM encrypted
   school_id: '', // e.g., "cranbrook_senior"
   grade_level: 0, // 1-12
+  user_type: 'student', // 'student', 'admin'
   reading_profile: {
     current_level: 0, // Current reading level
     growth_rate: 0, // Reading level growth per month
@@ -81,6 +84,28 @@ export const createStudentSchema = () => ({
   },
   created_at: null, // Date
   updated_at: null, // Date
+});
+
+/**
+ * Admin User Schema
+ * For administrative users with elevated permissions
+ */
+export const createAdminSchema = () => ({
+  id: '', // UUID
+  email: '', // Admin email address
+  name: '', // Full name
+  school_id: '', // Associated school
+  user_type: 'admin', // Always 'admin'
+  permissions: {
+    manage_books: true,
+    manage_students: true,
+    view_analytics: true,
+    upload_covers: true,
+    moderate_reviews: true,
+  },
+  created_at: null, // Date
+  updated_at: null, // Date
+  last_login: null, // Date
 });
 
 /**
@@ -180,6 +205,11 @@ export const validateStudent = (student) => {
   return required.every(field => student[field]);
 };
 
+export const validateAdmin = (admin) => {
+  const required = ['id', 'email', 'name', 'school_id'];
+  return required.every(field => admin[field]) && admin.user_type === 'admin';
+};
+
 /**
  * Sample data generators
  */
@@ -194,5 +224,14 @@ export const generateSampleStudent = (overrides = {}) => ({
   id: `student_${Date.now()}`,
   created_at: new Date(),
   updated_at: new Date(),
+  ...overrides,
+});
+
+export const generateSampleAdmin = (overrides = {}) => ({
+  ...createAdminSchema(),
+  id: `admin_${Date.now()}`,
+  created_at: new Date(),
+  updated_at: new Date(),
+  last_login: new Date(),
   ...overrides,
 });

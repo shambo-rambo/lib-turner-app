@@ -10,6 +10,7 @@ import OptimizedBookCard from './OptimizedBookCard';
 const VirtualBookGrid = ({ 
   books = [], 
   onBookClick,
+  onCoverUpdated,
   itemHeight = 280,
   itemWidth = 180,
   gap = 16,
@@ -200,6 +201,7 @@ const VirtualBookGrid = ({
               <OptimizedBookCard
                 book={book}
                 onBookClick={onBookClick}
+                onCoverUpdated={onCoverUpdated}
                 isVisible={true}
               />
             </div>

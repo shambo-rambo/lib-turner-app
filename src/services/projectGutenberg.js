@@ -1,7 +1,7 @@
 /**
  * Project Gutenberg Service
  * Handles fetching classic literature from Project Gutenberg
- * Provides the 25 classic books for LibFlix MVP
+ * Provides the 25 classic books for LibTurner MVP
  */
 
 import { assessBookReadingLevel } from '../utils/readingLevel.js';

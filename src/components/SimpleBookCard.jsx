@@ -14,8 +14,12 @@ const SimpleBookCard = ({ book, onBookClick }) => {
     ? book.engagement_data.student_ratings.reduce((a, b) => a + b, 0) / book.engagement_data.student_ratings.length
     : 0;
 
-  // Use book cover with fallback
-  const coverUrl = book.metadata.cover_url || `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
+  // Use effective cover (custom upload takes priority, then API cover, then fallback)
+  const coverUrl = book.effectiveCoverUrl || 
+                   book.metadata?.displayCoverUrl || 
+                   book.metadata?.custom_cover_url || 
+                   book.metadata?.cover_url || 
+                   `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
 
   const handleClick = () => {
     onBookClick?.(book);

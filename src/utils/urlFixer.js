@@ -1,5 +1,5 @@
 /**
- * Simple URL Fixer - Fixes known problematic image URLs
+ * Simple URL Fixer - Fixes known problematic image URLs for LibTurner
  * Based on DEBUG_REPORT.md analysis
  */
 
@@ -7,23 +7,24 @@ export class URLFixer {
   constructor() {
     // Known problematic patterns and their fixes
     this.fixes = {
-      // Mark ALL Amazon domains for removal - they all block CORS
+      // Only block specific problematic Amazon domains that we know cause CORS issues
       'images-na.ssl-images-amazon.com': null,
       'ssl-images-amazon.com': null,
       'ecx.images-amazon.com': null,
-      'm.media-amazon.com': null,
       
-      // CloudFront issues - mark for removal
+      // Only block the specific problematic CloudFront domain
       'd2arxad8u2l0g7.cloudfront.net': null
+      // Removed 'm.media-amazon.com' - Google found working URLs from this domain!
     };
     
     // Domains to completely avoid (move to end of fallback list)
     this.problematicDomains = [
-      'amazon.com',
-      'cloudfront.net',
+      'images-na.ssl-images-amazon.com',
       'ssl-images-amazon.com',
-      'm.media-amazon.com',
-      'd2arxad8u2l0g7.cloudfront.net'
+      'ecx.images-amazon.com',
+      'd2arxad8u2l0g7.cloudfront.net' // Only this specific problematic CloudFront subdomain
+      // Removed generic 'cloudfront.net' - many publishers use CloudFront!
+      // Removed generic 'amazon.com' and 'm.media-amazon.com' - some work fine
     ];
   }
 
@@ -36,7 +37,6 @@ export class URLFixer {
     // Check if URL should be removed entirely
     for (const [badDomain, goodDomain] of Object.entries(this.fixes)) {
       if (goodDomain === null && url.includes(badDomain)) {
-        console.log(`🚫 Blocking problematic URL: ${badDomain}`);
         return null; // Remove this URL entirely
       }
     }
@@ -93,6 +93,7 @@ export class URLFixer {
   generateReliableUrls(book) {
     const urls = [];
     const isbn = this.cleanISBN(book.isbn || book.metadata?.isbn);
+    const title = encodeURIComponent((book.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '+'));
     
     if (isbn) {
       // Top reliable sources based on DEBUG_REPORT.md
@@ -107,6 +108,16 @@ export class URLFixer {
       if (isbn10 && isbn10 !== isbn) {
         urls.push(`https://covers.openlibrary.org/b/isbn/${isbn10}-L.jpg`);
       }
+      
+      // Additional sources for difficult books
+      urls.push(`https://images.isbndb.com/covers/${isbn.slice(-2)}/${isbn.slice(-4, -2)}/${isbn}.jpg`);
+      urls.push(`https://www.worldcat.org/wcpa/cover/${isbn}?size=L`);
+    }
+    
+    // Add more generic fallback sources
+    if (isbn) {
+      urls.push(`https://covers.openlibrary.org/b/olid/OL24364296M-L.jpg`); // Generic fallback
+      urls.push(`https://archive.org/download/${isbn}/${isbn}.jpg`); // Alternative archive format
     }
     
     return urls;

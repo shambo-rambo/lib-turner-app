@@ -4,19 +4,22 @@
  * Features 2:3 aspect ratio, hover effects, and genre themes
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Avatar from '@radix-ui/react-avatar';
 import { 
   HeartIcon, 
   StarIcon, 
   BookOpenIcon, 
   ShareIcon,
-  PlayIcon 
+  PlayIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 import { 
   HeartIcon as HeartSolid, 
   StarIcon as StarSolid 
 } from '@heroicons/react/24/solid';
+import { getCurrentUser } from '../services/auth.js';
+import BookCoverUpload from './admin/BookCoverUpload.jsx';
 
 /**
  * Genre theme configurations for visual appeal
@@ -136,11 +139,30 @@ const BookCard = ({
   isSaved = false,
   userRating = 0,
   aiComment,
-  className = '' 
+  className = '',
+  onCoverUpdated
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        setIsAdmin(currentUser && currentUser.user_type === 'admin' && currentUser.permissions?.upload_covers);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
 
   // Get theme for primary genre
   const primaryGenre = book.metadata.genres[0] || 'default';
@@ -151,8 +173,12 @@ const BookCard = ({
     ? book.engagement_data.student_ratings.reduce((a, b) => a + b, 0) / book.engagement_data.student_ratings.length
     : 0;
 
-  // Use book cover with fallback
-  const coverUrl = book.metadata.cover_url || `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
+  // Use effective cover (custom upload takes priority, then API cover, then fallback)
+  const coverUrl = book.effectiveCoverUrl || 
+                   book.metadata?.displayCoverUrl || 
+                   book.metadata?.custom_cover_url || 
+                   book.metadata?.cover_url || 
+                   `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 20))}`;
 
   const handleBookClick = () => {
     onBookClick?.(book);
@@ -202,6 +228,29 @@ const BookCard = ({
           absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent
           opacity-0 group-hover:opacity-100 transition-opacity duration-300
         `} />
+
+        {/* Admin Edit Button */}
+        {isAdmin && (
+          <div className={`
+            absolute top-2 left-2 
+            opacity-0 group-hover:opacity-100 transition-all duration-300
+            transform translate-y-2 group-hover:translate-y-0
+          `}>
+            <BookCoverUpload
+              book={book}
+              onCoverUpdated={onCoverUpdated}
+              trigger={
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-colors duration-200 shadow-lg"
+                  title="Edit book cover"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </button>
+              }
+            />
+          </div>
+        )}
 
         {/* Reading Level Badge */}
         <ReadingLevelBadge 

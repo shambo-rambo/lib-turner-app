@@ -9,6 +9,7 @@ const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
 console.log('Google Books API Key loaded:', API_KEY ? 'Present' : 'Missing');
 if (!API_KEY || API_KEY === 'your_api_key_here') {
   console.error('❌ Google Books API key is missing or invalid. Check your .env file.');
+  console.warn('📚 Disabling Google Books API calls due to missing/invalid key');
 }
 const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
 
@@ -17,6 +18,7 @@ class GoogleBooksAPI {
     this.cache = new Map();
     this.rateLimitDelay = 100; // 100ms between requests
     this.lastRequestTime = 0;
+    this.apiDisabled = false; // Flag to disable API after 403 errors
   }
 
   /**
@@ -50,9 +52,13 @@ class GoogleBooksAPI {
       return this.cache.get(cleanISBN);
     }
 
-    // Skip API call if key is missing or invalid
-    if (!API_KEY || API_KEY === 'your_api_key_here') {
-      console.warn(`Skipping Google Books API call - invalid API key for ISBN: ${cleanISBN}`);
+    // Skip API call if key is missing, invalid, or API disabled due to 403 errors
+    if (!API_KEY || API_KEY === 'your_api_key_here' || this.apiDisabled) {
+      if (this.apiDisabled) {
+        console.warn(`Skipping Google Books API call - disabled due to 403 errors for ISBN: ${cleanISBN}`);
+      } else {
+        console.warn(`Skipping Google Books API call - invalid API key for ISBN: ${cleanISBN}`);
+      }
       return null;
     }
 
@@ -63,6 +69,11 @@ class GoogleBooksAPI {
       const response = await fetch(url);
       
       if (!response.ok) {
+        if (response.status === 403) {
+          console.error('❌ Google Books API: 403 Forbidden - Disabling future API calls');
+          console.error('💡 Check: 1) API key enabled, 2) Books API enabled in console, 3) Quotas, 4) Billing');
+          this.apiDisabled = true;
+        }
         throw new Error(`API request failed: ${response.status}`);
       }
 
@@ -85,8 +96,12 @@ class GoogleBooksAPI {
    * Search books by title and author
    */
   async searchBooks(title, author = '') {
-    if (!API_KEY) {
-      console.warn('Google Books API key not found, using fallback');
+    if (!API_KEY || this.apiDisabled) {
+      if (this.apiDisabled) {
+        console.warn('Google Books API disabled due to 403 errors, using fallback');
+      } else {
+        console.warn('Google Books API key not found, using fallback');
+      }
       return [];
     }
 
@@ -107,6 +122,11 @@ class GoogleBooksAPI {
       const response = await fetch(url);
       
       if (!response.ok) {
+        if (response.status === 403) {
+          console.error('❌ Google Books API: 403 Forbidden - Disabling future API calls');
+          console.error('💡 Check: 1) API key enabled, 2) Books API enabled in console, 3) Quotas, 4) Billing');
+          this.apiDisabled = true;
+        }
         throw new Error(`API request failed: ${response.status}`);
       }
 
@@ -212,6 +232,15 @@ class GoogleBooksAPI {
         }
         
         if (googleBook) {
+          // If no cover from Books API, try image search
+          if (!googleBook.primaryCoverUrl) {
+            const { googleImageSearch } = await import('./googleImageSearch.js');
+            const coverUrl = await googleImageSearch.findBookCover(googleBook);
+            if (coverUrl) {
+              googleBook.primaryCoverUrl = coverUrl;
+            }
+          }
+
           // Merge with our existing data
           const enhancedBook = {
             ...book,
@@ -252,7 +281,7 @@ class GoogleBooksAPI {
     }
     
     return results;
-  }
+  }''
 
   /**
    * Get API usage stats
@@ -280,8 +309,7 @@ export const enhanceBookWithGoogleAPI = async (book) => {
  * Test function to verify API is working
  */
 export const testGoogleBooksAPI = async () => {
-  console.log('Testing Google Books API...');
-  console.log('API Stats:', googleBooksAPI.getStats());
+  // Testing Google Books API
   
   if (!API_KEY || API_KEY === 'your_api_key_here') {
     console.warn('No valid API key found. Add VITE_GOOGLE_BOOKS_API_KEY to .env file');
@@ -291,10 +319,7 @@ export const testGoogleBooksAPI = async () => {
   try {
     // Test with Harry Potter ISBN
     const testBook = await googleBooksAPI.getBookByISBN('9780439708180');
-    console.log('Test result:', testBook ? 'SUCCESS' : 'NO_RESULTS');
-    if (testBook) {
-      console.log('Cover URL:', testBook.primaryCoverUrl);
-    }
+    // Test successful
     return !!testBook;
   } catch (error) {
     console.error('API test failed:', error);

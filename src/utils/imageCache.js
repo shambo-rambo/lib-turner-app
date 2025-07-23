@@ -1,6 +1,6 @@
 /**
  * Image Cache and Optimization Utility
- * Netflix-inspired image handling for LibFlix
+ * Netflix-inspired image handling for LibTurner
  */
 
 import { useState, useEffect } from 'react';
@@ -62,14 +62,26 @@ class ImageCache {
       img.onload = () => {
         clearTimeout(timeout);
         
-        // Skip canvas conversion for faster loading - just cache the URL
+        // Check for valid image dimensions (reject 1x1 placeholders)
+        const width = img.naturalWidth;
+        const height = img.naturalHeight;
+        
+        if (width <= 10 || height <= 10) {
+          // Silently reject tiny placeholder images
+          this.failedUrls.add(fixedUrl);
+          this.preloadQueue.delete(fixedUrl);
+          resolve(null);
+          return;
+        }
+        
+        // Valid image - cache it
         this.cache.set(fixedUrl, {
           url: fixedUrl,
           originalUrl: url,
           element: img,
           loaded: true,
           timestamp: Date.now(),
-          size: { width: img.naturalWidth, height: img.naturalHeight }
+          size: { width, height }
         });
         this.preloadQueue.delete(fixedUrl);
         resolve(this.cache.get(fixedUrl));
@@ -234,33 +246,47 @@ class ImageCache {
       .filter(url => url && this.validateImageUrl(url))
       .slice(0, 8); // Increased to 8 URLs with new sources
     
-    console.log(`Trying ${validUrls.length} URLs for book:`, bookData?.title || 'Unknown');
     
     for (let i = 0; i < validUrls.length; i++) {
       const url = validUrls[i];
       try {
         // Skip permanently failed URLs, but allow retry for timeouts
         if (this.failedUrls.has(url) && retryCount === 0) {
-          console.log(`Skipping known failed URL: ${url}`);
           continue;
         }
 
-        console.log(`Attempting URL ${i + 1}/${validUrls.length}: ${url}`);
         const result = await this.preloadImage(url, priority);
         if (result) {
-          console.log(`✅ Success with URL ${i + 1}: ${url}`);
+          // Removed success logging for cleaner console
           // Remove from failed URLs if it succeeded on retry
           this.failedUrls.delete(url);
           return result;
-        } else {
-          console.log(`❌ Failed URL ${i + 1}: ${url}`);
         }
       } catch (error) {
         console.warn(`Error loading ${url}:`, error);
       }
     }
     
-    // Retry logic for temporary failures
+    // Step 5: Try Google Image Search as fallback before retrying
+    if (retryCount === 0 && bookData) {
+      try {
+        console.log(`🔍 Trying Google Image Search for: ${bookData.title}`);
+        const { googleImageSearch } = await import('../services/googleImageSearch.js');
+        const googleImageUrl = await googleImageSearch.findBookCover(bookData);
+        
+        if (googleImageUrl) {
+          // Google Image Search found cover (logging removed for cleaner console)
+          const result = await this.preloadImage(googleImageUrl, priority);
+          if (result) {
+            return result;
+          }
+        }
+      } catch (error) {
+        console.warn('Google Image Search failed:', error);
+      }
+    }
+    
+    // Step 6: Retry logic for temporary failures
     if (retryCount === 0 && bookData) {
       console.log(`🔄 Retrying with fresh URLs for: ${bookData.title}`);
       // Wait 2 seconds before retry to handle temporary network issues
@@ -268,17 +294,11 @@ class ImageCache {
       return this.loadImageWithFallbacks(urls, priority, bookData, 1);
     }
     
-    console.log(`❌ All URLs failed for book: ${bookData?.title || 'Unknown'} (after ${retryCount + 1} attempts)`);
-    
-    // Record the failing book for analysis
-    if (bookData && typeof window !== 'undefined') {
-      try {
-        const { imageDebugger } = await import('./imageDebugger.js');
-        imageDebugger.recordFailingBook?.(bookData, validUrls);
-      } catch (error) {
-        console.warn('Could not record failing book:', error);
-      }
+    // All options exhausted
+    if (bookData?.title && bookData.title !== 'Unknown') {
+      console.log(`❌ No cover found for: ${bookData.title}`);
     }
+    
     
     return null;
   }
@@ -463,7 +483,7 @@ window.testUrlFixes = (books) => {
     console.log('\n🎯 Summary:');
     console.log('✅ Amazon/CloudFront URLs are now BLOCKED (no more CORS errors!)');
     console.log('✅ Reliable fallback URLs added from ISBN');
-    console.log('✅ URL fixer is working! Images should load better now.');
+    console.log('✅ URL fixer is working! LibTurner images should load better now.');
   });
 };
 
@@ -481,6 +501,12 @@ window.diagnoseBookCover = async (books, bookIndex = 0) => {
     isbn: book.isbn || book.metadata?.isbn,
     cover_url: book.metadata?.cover_url,
     fallback_count: book.metadata?.fallback_urls?.length || 0
+  });
+  
+  // Show the actual fallback URLs from the book data
+  console.log('\n📋 Book\'s fallback URLs:');
+  (book.metadata?.fallback_urls || []).slice(0, 3).forEach((url, i) => {
+    console.log(`  ${i+1}. ${url.substring(0, 80)}...`);
   });
   
   // Test URL processing

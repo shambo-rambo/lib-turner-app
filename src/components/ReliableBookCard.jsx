@@ -9,9 +9,15 @@ const ReliableBookCard = ({ book, onBookClick }) => {
   const [imageStatus, setImageStatus] = useState('loading');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Use effective cover (custom upload takes priority, then API cover, then fallback)
+  const effectiveCoverUrl = book.effectiveCoverUrl || 
+                           book.metadata?.displayCoverUrl || 
+                           book.metadata?.custom_cover_url || 
+                           book.metadata?.cover_url;
+
   // All possible image sources
   const imageSources = [
-    book.metadata.cover_url,
+    effectiveCoverUrl,
     ...(book.metadata.fallback_urls || [])
   ].filter(Boolean);
 

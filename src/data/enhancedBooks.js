@@ -194,11 +194,7 @@ class EnhancedBooksManager {
       });
 
       this.lastFetch = Date.now();
-      console.log(`✅ Enhanced ${this.enhancedBooks.length} books with Google Books API`);
-      
-      // Log some stats
-      const withCovers = this.enhancedBooks.filter(book => book.metadata.cover_url).length;
-      console.log(`📸 ${withCovers}/${this.enhancedBooks.length} books have Google Books covers`);
+      // Enhanced books with Google Books API (logging removed for cleaner console)
 
       this.loading = false;
       return this.enhancedBooks;

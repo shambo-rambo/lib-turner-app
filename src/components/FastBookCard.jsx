@@ -10,9 +10,15 @@ const FastBookCard = ({ book, onBookClick }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [allImagesFailed, setAllImagesFailed] = useState(false);
 
+  // Use effective cover (custom upload takes priority, then API cover, then fallback)
+  const effectiveCoverUrl = book.effectiveCoverUrl || 
+                           book.metadata?.displayCoverUrl || 
+                           book.metadata?.custom_cover_url || 
+                           book.metadata?.cover_url;
+
   // Create array of all possible image URLs
   const imageUrls = [
-    book.metadata.cover_url,
+    effectiveCoverUrl,
     ...(book.metadata.fallback_urls || []),
     `https://via.placeholder.com/300x450/6366F1/white?text=${encodeURIComponent(book.title.substring(0, 15))}`
   ].filter(Boolean);
